@@ -6,6 +6,6 @@ import com.google.gson.annotations.SerializedName
 data class Place (
   @SerializedName("fsq_id") var fsqId: String,
   var geocodes: Geocodes? = null,
-  var name: String,
-  var location : Location?,
+  var name: String = "",
+  var location : Location? = null ,
 )

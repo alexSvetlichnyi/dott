@@ -2,6 +2,7 @@ package com.example.dott.ui.placedetails
 
 import android.app.Application
 import android.widget.ImageView
+import androidx.annotation.VisibleForTesting
 import androidx.databinding.BindingAdapter
 import androidx.databinding.ObservableField
 import androidx.lifecycle.viewModelScope
@@ -65,23 +66,25 @@ class PlaceDetailsViewModel @Inject constructor (
 
         // Set place price if available
         result.data.price?.let {
-            val price = getString(
-                when (result.data.price) {
-                    1 -> R.string.cheap
-                    2 -> R.string.moderate
-                    3 -> R.string.expensive
-                    4 -> R.string.very_expensive
-                    else -> R.string.unknown
-                }
-            )
-            phone.set(getString(R.string.price, price))
+            price.set(getString(R.string.price, mapPrice(it)))
         }
 
         // Set place rating if available
         result.data.rating?.let {
-            phone.set(getString(R.string.rating, result.data.rating))
+            rating.set(getString(R.string.rating, result.data.rating.toString()))
         }
     }
+
+    @VisibleForTesting
+    fun mapPrice(priceValue: Int): String = getString(
+        when (priceValue) {
+            1 -> R.string.cheap
+            2 -> R.string.moderate
+            3 -> R.string.expensive
+            4 -> R.string.very_expensive
+            else -> R.string.unknown
+        }
+    )
 
     companion object {
         @BindingAdapter("imageUrl")

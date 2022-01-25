@@ -2,6 +2,7 @@ package com.example.dott.ui.placeslist
 
 import android.Manifest
 import android.content.pm.PackageManager
+import android.location.Location
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -27,6 +28,7 @@ import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.Marker
 import com.google.android.gms.maps.model.MarkerOptions
+import com.google.android.gms.maps.model.VisibleRegion
 import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -42,6 +44,7 @@ class PlacesFragment : Fragment(), OnMapReadyCallback {
     // Google maps
     private lateinit var map: GoogleMap
     private var mapFragment: SupportMapFragment? = null
+    private var mapMarkers = mutableListOf<Marker>()
 
     // Location Provider entities.
     private lateinit var fusedLocationProviderClient: FusedLocationProviderClient
@@ -67,6 +70,11 @@ class PlacesFragment : Fragment(), OnMapReadyCallback {
                     .setAction(getString(R.string.close)) { }.apply { show() }
             }
         })
+        binding.removeMarkers.setOnClickListener {
+            mapMarkers.forEach { marker -> marker.remove() }
+            mapMarkers.clear()
+            viewModel.clearCache()
+        }
 
         return binding.root
     }
@@ -92,7 +100,7 @@ class PlacesFragment : Fragment(), OnMapReadyCallback {
 
         // Find new places when user stop moving camera.
         map.setOnCameraIdleListener {
-            viewModel.findCurrentPlaces(map.cameraPosition.target, map.projection.visibleRegion)
+            viewModel.findCurrentPlaces(map.cameraPosition.target, getMapVisibleRadius())
         }
 
         // Use a custom info window.
@@ -145,6 +153,7 @@ class PlacesFragment : Fragment(), OnMapReadyCallback {
                 )?.apply {
                     // we need this tag to open PlaceDetails
                     tag = place.fsqId
+                    mapMarkers.add(this)
 
                     // start smooth animation
                     viewModel.startDropMarkerAnimation(this, map.projection)
@@ -213,6 +222,24 @@ class PlacesFragment : Fragment(), OnMapReadyCallback {
         } catch (e: SecurityException) {
             Log.e("Exception: %s", e.message, e)
         }
+    }
+
+
+    private fun getMapVisibleRadius(): Int {
+        val distance = FloatArray(1)
+
+        val farLeft: LatLng = map.projection.visibleRegion.farLeft
+        val nearRight: LatLng = map.projection.visibleRegion.nearRight
+
+        Location.distanceBetween(
+            farLeft.latitude,
+            farLeft.longitude,
+            nearRight.latitude,
+            nearRight.longitude,
+            distance
+        )
+
+        return (distance[0] / 2).toInt()
     }
 
     companion object {

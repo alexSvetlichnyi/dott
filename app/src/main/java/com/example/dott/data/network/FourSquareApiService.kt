@@ -9,10 +9,11 @@ import retrofit2.http.Query
 
 interface FourSquareApiService {
     @GET("v3/places/search")
-    suspend fun getNearbyPlaces(@Query ("ll") ll: String,
-                                @Query ("categories") categories: String,
-                                @Query ("limit") limit: Int,
-                                @Query ("radius") radius: Int): Response<PlacesResponse>
+    suspend fun getPlaces(@Query ("ll") ll: String,
+                          @Query ("categories") categories: String,
+                          @Query ("limit") limit: Int,
+                          @Query ("radius") radius: Int,
+                          @Query ("sort") sortedBy: String): Response<PlacesResponse>
 
     @GET("v3/places/{id}")
     suspend fun getPlaceDetails(@Path("id") placeId: String,

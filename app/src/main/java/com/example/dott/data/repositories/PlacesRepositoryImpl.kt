@@ -32,9 +32,9 @@ class PlacesRepositoryImpl @Inject constructor(
      */
     override suspend fun getPlaces(latLng: LatLng, radius: Int): Resource<PlacesResponse>
     = withContext(Dispatchers.IO) {
-        handleResult(fourSquareApiService.getNearbyPlaces(
+        handleResult(fourSquareApiService.getPlaces(
                 "${latLng.latitude},${latLng.longitude}",
-                RESTAURANTS_CAT_ID, RESULTS_LIMIT, radius
+                RESTAURANTS_CAT_ID, RESULTS_LIMIT, radius, SORTED_BY_DISTANCE
             )
         ) as Resource<PlacesResponse>
     }
@@ -73,5 +73,6 @@ class PlacesRepositoryImpl @Inject constructor(
         const val RESTAURANTS_CAT_ID = "13000"
         const val FIELDS = "photos,name,description,tel,location,email,menu,price,rating"
         const val DEFAULT_ERROR = "Something went wrong"
+        const val SORTED_BY_DISTANCE = "DISTANCE"
     }
 }

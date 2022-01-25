@@ -6,6 +6,7 @@ import android.os.Handler
 import android.os.Looper
 import android.os.SystemClock
 import android.view.animation.Interpolator
+import androidx.annotation.VisibleForTesting
 import androidx.interpolator.view.animation.LinearOutSlowInInterpolator
 import androidx.lifecycle.viewModelScope
 import com.example.dott.R
@@ -33,19 +34,19 @@ class PlacesListViewModel @Inject constructor (
     val showPlaces: SingleLiveData<List<Place>> by lazy { SingleLiveData() }
 
     // List of known locations
-    private var allPlaces = mutableSetOf<Place>()
+    @VisibleForTesting
+    var allPlaces = mutableSetOf<Place>()
 
-    fun findCurrentPlaces(latLng: LatLng, visibleRegion: VisibleRegion) {
+    fun findCurrentPlaces(latLng: LatLng, radius: Int) {
         viewModelScope.launch {
-            val radius = getMapVisibleRadius(visibleRegion)
             if (radius > MAX_RADIUS) {
                 errorMessage.value = getString(R.string.radius_error)
             } else {
                 when (val result =
-                    placesRepository.getPlaces(latLng, getMapVisibleRadius(visibleRegion))) {
+                    placesRepository.getPlaces(latLng, radius)) {
                     is Resource.Success -> {
                         result.data.results.filter {
-                            it.fsqId !in allPlaces.map{ item -> item.fsqId }
+                            it.fsqId !in allPlaces.map { item -> item.fsqId }
                         }.apply {
                             showPlaces.value = this
                             allPlaces.addAll(this)
@@ -86,21 +87,8 @@ class PlacesListViewModel @Inject constructor (
         })
     }
 
-    private fun getMapVisibleRadius(visibleRegion: VisibleRegion): Int {
-        val distance = FloatArray(1)
-
-        val farLeft: LatLng = visibleRegion.farLeft
-        val nearRight: LatLng = visibleRegion.nearRight
-
-        Location.distanceBetween(
-            farLeft.latitude,
-            farLeft.longitude,
-            nearRight.latitude,
-            nearRight.longitude,
-            distance
-        )
-
-        return (distance[0] / 2).toInt()
+    fun clearCache() {
+        allPlaces.clear()
     }
 
     companion object {
